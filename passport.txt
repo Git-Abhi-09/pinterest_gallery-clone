@@ -1,0 +1,66 @@
+
+// following are the passport setup step 
+1] app.js ✅
+const expressSession = require("express-session");
+
+app.use(expressSession({
+  resave: false,
+  saveUninitialized:false,
+  secret:"hey hey hey"
+}))
+app.use(passport.initialize());
+app.use(passport.session());
+passport.serializeUser(usersRouter.serializeUser());
+passport.deserializeUser(usersRouter.deserializeUser());
+
+2] user.js mongoose setup file ✅
+const plm = require("passport-local-mongoose");
+userdata.plugin(plm);
+
+3] In index.js create user ✅
+const localStrategy = require("passport-local");
+passport.use(new localStrategy(userModel.authenticate()));
+
+router.post("/register" , function(req , res){
+  const userData = new userModel({
+      username:req.body.username,
+      email:req.body.email,
+      fullname:req.body.fullname
+  });
+
+  userModel.register(userData,req.body.password)
+  .then(function(){
+      passport.authenticate("local")(req , res,function(){
+          res.redirect("/profile");
+      })
+  })
+});
+
+4] In index.js login user ✅
+
+router.post("/login",passport.authenticate("local",{
+  successRedirect: "/profile",
+  failureRedirect:"/login",
+  failureFlash:true
+}), function(req,res){    
+});
+
+5] In index.js logOut user ✅
+
+router.get("/logout",function(req,res){
+  req.logout(function(err){
+      if(err) { return next(err);}
+      res.redirect('/');
+  });
+});
+
+6] In index.js use setup code for visit user profile ✅
+
+router.get("/profile" ,isLoggedIn, function(req , res){
+  res.render('profile');
+});
+
+function isLoggedIn(req,res,next){
+  if(req.isAuthenticated()) return next();
+  res.redirect('/');
+}
